@@ -1,0 +1,391 @@
+*** Background
+- Process isolation
+- Concurrency
+- RObustness:
+error handling
+- Hot code reloading:
+
+- External interfaces
+Ports: treats outside world as processes
+
+- Portability
+- SMP Support: symmetric multiprocessing
+*** History
+- Interpreter on top of Prolog - so had to build te  first VMs (C-based)
+- LEarn you some Erlang for great good
+- Named after mathematician Erlang who worked on tele-traffic and queue theory.
+*** Shell
+- End command with afullstop
+- Can't define fns and modules in shell
+- All shell commands are functional calls.  help(), h(), b(), f()
+- pwd(), cd(dir), ls(dir), q() [quit], c(Module) [compile], e(N) - execute Nth command in history
+- supports emacs commands for navigation
+- text editors that generate 8-bit characters or utf-8 encode. some by default generate 16-bit chars.
+- Everytime you make an error in the shell, you're crashing the shell - not afraid of crashing processes.
+
+** Sequential Erlang
+*** Data Types
+- No user defined types. Erlang fakes it using `records`. Elixir uses structs.
+- No static types because of hot code reloading.
+
+**** Integers, Floats and Atoms
+- Integers (any base 2 to 32).
+- Floats
+- No char data type (ASCII etc.). Integer represents ASCII values.
+- Atom: a constant literal (with a name) e.g. help is an atom help() returns the value of the atom
+- $a -> 97 [the shell tries to be helpful and returns the character representation of the integer]
+- Integers are like the primitives, strings are an abstraction (array of integers along with the $ operator)
+
+**** Tuples and Lists
+- all the way down to the VM, everything is immutable. (Elixir has some mutable variable, but no mutable data)
+- {123, bcd}
+- Another way of faking user-def types - the first element of the tuple is an atom the describes the tuple {person, 'Joe', 'Armstrong'}
+- Lists: [a, [b, c], d] - empty list [] (used often) or empty tuple {}
+"Hello World" = [$H, $e, $l, $l, $o] = [72,101,108,108,111] (Elixir uses binaries to represnt chars). In those days, this was more functional.
+
+
+***** Internal representation
+- Tuples are one block of memory with soem metadata
+- Lists are linked lists. Each list cell is immutable. You can add to the front of the list. You can change the reference point (where to start).
+- Working with the front of the list is fast. iF you want t the end of the data - you end up copying the list - but the list cell is not copied, the reference is reused.
+- Can't have a doubly linked lists, coz you can't mutate it - you'll end up copying everything.
+
+***** Definition
+
+- List = [ Element | List ] or
+         []
+  ^ list cell syntax
+- Sugar: [ a,b | [c] ] or [ a, b, c, d ]
+
+**** Variables
+- Start with uppercase or _
+- Cannot rebind a variable within its scope (that's why you have f() in the shell to forget things)
+- Before its bound it does not exists - declaring and assignment are NOT separate.
+- _ is like go, always matches, never binds. Ignore/placeholder.
+
+**** Complex Data Structures
+- No explicit memory allocation or deallocation is needed
+- Java made it acceptable to have VMs and garbage collection in production
+
+*** Other Abstractions
+**** Pattern Matching
+- This is how you bind variables or select a process etc.
+- For control flow also (if, case, functions)
+- Syntax for building is the same as matching
+
+Pattern = Expression
+- A = 10 is an actual pattern matching statements
+- {B, C, D} = {10, foo, bar}
+- Equality checking {E, E, foo} = {abc, abc, foo}
+- Two tuples are equal becuase they look the same, you can never look at whether they are the same. either looks the same or doesn't -
+
+- [H | T] = [1,2,3] (getting head and tail)
+- No partial successes,
+
+**** Functions
+- In antoher module - module:function(Arg1, Arg2, ...)
+- In same module - function(Arg1, Arg2, ...)
+- Syntactically all functions have to be atoms
+
+- no global data, shared data or mutable
+- Different arities are differnet functions
+  product(X, Y) -> X * Y
+  product(X, Y, Z) -> X * Y * Z
+
+- No functions variable number of arguments.
+- Has no possiblity of currying.
+- No higher order functions
+- Why? Because they were not intentionally functional
+- ; are clause seperators - they separate alternatives
+- A clause has a head, a body, and expressions are separated by commas.
+
+***** Example of function
+- circumference(R) ->
+    2 * math:pi() * R
+
+***** Example of clauses for control flow via pattern matching
+
+#+BEGIN_SRC erlang
+
+area({square, Side}) ->
+     Side * Side;
+area({circle, Radius}) ->
+     math:pi() * Radius * Radius;
+area({triangle, A, B, C}) ->
+     math:sqrt(S  ....
+                            .
+#+END_SRC
+
+- Returns value of last expression
+- WHat happens if it doesn't match? You get an error. Not scared of errors.
+
+**** Modules, Exports, Comments, Attributes
+
+#+BEGIN_SRC erlang
+-module(demo)
+-export([double/1])
+% comment
+double(X) ->
+    times(X,2).
+#+END_SRC
+- if there's a minus, it's an attribute, module directives.
+- stored in files with erl extension with the same filename (demo module in demo.erl)
+- one or multiple export declarations - you can group them though
+- fully qualified call.
+**** Equality
+B == 2. (this returns a bool)
+**** Case
+#+BEGIN_SRC erlang
+case lists:member(A,B) of
+    true [or pattern] -> expression;
+    false [or pattern] -> expr
+end.
+#+END_SRC
+
+#+BEGIN_SRC erlang
+convert(Day) ->
+  case Day of
+    monday -> 1;
+    sunday -> 2
+  end.
+#+END_SRC
+**** Guards
+1.
+#+BEGIN_SRC erlang
+factorial(N) when N > 0 ->
+    N * factorial(N - 1);
+factorial(0) -> 1.
+#+END_SRC
+
+is NOT the same as:
+2.
+#+BEGIN_SRC erlang
+factorial(0) -> 1;
+factorial(N) ->
+   N * factorial(N - 1).
+#+END_SRC
+
+1. is better.
+
+You cannot use functions as guards. You can do multiple guards like when N < 0, N = 10
+**** If
+#+BEGIN_SRC erlang
+if
+   X < 1  -> smaller;
+   X > 1  -> greater;
+   X == 1 -> equal
+end
+#+END_SRC
+- when case statements got too verbose in simple cases
+- can't call functions as criteria
+- can do true at the end
+
+**** Built-in Functions
+- No loops, only recursion. There are modules for that though, which is recursion underneath.
+- P
+
+*** Errors:
+- Bigger picture: think of processes and what will happen due to the errors:
+  - retry
+  - clean up state
+  - let it crash
+- Shell creates a crash dump when you manage to crash the shell.
+- Catch
+- It's a system with a language. Rarely do you have a central thread of execution.
+#+BEGIN_SRC erlang
+catch 1+a
+#+END_SRC
+- Try
+#+BEGIN_SRC erlang
+try 1+a catch C:E -> {C,E} end.
+#+END_SRc
+
+also call erlang:get_stacktrace()
+- you seldom do defensive programmign. sometimes you catch, log and then crash it again.
+- Only true and false. No NIL value. Errors are nil.
+
+** Concurrent Erlang
+
+*** processes
+- pid2 = spawn(Mod, Func, Args)
+- self() is the processes own pid
+- spawn is async.
+- spawn fails only when maximum (262000, 135 million)
+- all erlang modules are equal, no differences between system and yours.
+- similarly with pids
+- when the function is done, that process dies. and when a processes dies everything goes away.
+
+*** communicating between processes (message passing)
+- sending
+Pid ! Msg
+e.g.: Pid2 ! { self(), foo }
+- pid2 cannot find out who sent that message, so you usually include the sender in the message.
+
+- receiving
+
+#+BEGIN_SRC erlang
+receive
+    { reset, Board } -> reset(Board);
+    { do, Signal   } -> process(Signal)
+end
+#+END_SRC
+selective and non-selective pattern matching
+- end th receive function and end the process
+- different pid functions can be in same module.
+
+- Can also match processes to the sending pid
+
+**** Timeouts
+receives can have timeouts with after.
+can do after 0 which scans the mailbox and clears it if you want i ti to.
+
+*** process skeleton
+- Start
+- Initialize state
+- Loop with that state
+
+*** how do you share state
+- have a process that owns the shared value and talk to the process to share that.
+
+** System Design Principles (OTP)
+*** Release
+- COmplete erlang systems are releases
+- A version of the ERTS
+- start, stop and manage applications in a standard manner
+- Releases can be upgraded or downgraded as a unit
+*** Applications (& Supervisors)
+- Logical unit of processes and modules grouped together to perform a given task
+- Application are trees of supervisors and their workers
+- Supervisors restart processes and manage processes
+*** gen_server
+- gen_server is a module that implements stock behaviours.
+- There are about 5 such modules in erlang.
+- gen_server contains generic details.
+- have a callback module for app logic.
+
+** Erlang VM (BEAM)
+- Built-in support for
+  - Lightweight massive concurrency, sync mesasges, process isolation, error handling, dynamic code handling, soft real-time
+- BIFs, interfaces to the outside world
+- Support for languages features:
+  - immutable data
+  - pattern matching
+  - TCO
+  - [...]
+- Multicore (SMP) goal: should be transparent to the program.
+  - RunningBEAM consists of a number of scheduler when your are running beam you are starting multipel schedulers.
+*** Schedulers
+- Semi-autonomous BEAM VM: contains own run-queues, runs as separately as possible to avoid locks
+  - does its own mem mgmt
+- one per vm thread
+**** Load Balancing
+- Fewer schedulers are better due to memory locality
+- How? Process stealing
+- Go look at another scheduler and use a process from it (only steal from run-queues, never running)
+- Once every period (40k reductions - function calls) a new master scheduler is chosen.
+- Master (first to reach 40k reductions) balances/optimizes workloads on schedulers
+- Master suspends unneeded schedulers, schedules changes on other schedulers run-queues.
+
+**** Scheduling Processes
+- spawned on same scheduler as spawing process
+- A process can be state - running runnable waiting , exiting garbage_collecting, suspended
+- Schedulers supprort non-blocking by:
+  - No busy wait
+  - Suspended processes  Become runnable when a message arrives
+  - Running processes will be suspeded waiting for a message
+    - re-scheduled after 2000 reductions (so that it doesn't block a scheduler) - i.e. putting back to the beginning of the queue.
+      [INTERESTING!]
+
+**** Ports
+- Not pre-emptive
+- Create on same scheduler. Some port activities are scheduled
+
+*** Memory
+**** Many seaparte memory areas/types
+  - Process heaps
+  - ETS tables
+  - Atom table
+  - Large binary space
+  - Code space
+  - Timers [...]
+
+**** Atom table
+- All atoms are interned in a global table
+  - That's why equality comparison is fast. Never need to use integers as tags for speed.
+- Atoms are never deleted
+- Avoids programs which DYNAMICALLY  rampantly creates atoms an uncontrolled fashion
+- Fixed size table
+  - System crashes when full!
+
+**** Large binary space
+- Large binaries ( > 64 bytes) stored in separate area
+- Fast message passing as only pointer sent
+  - Can save a lot of money as well
+- Shared between processes and ETS tables
+- Can be long delay before being reclaimed by GC
+  - All processes which have seen the binary must first do a GC (hence reference C - counter memory)
+  - Can grow and crash system.
+  - Pass a pointer along inside ONE node. On a different node, it serializes data.
+
+**** ETS tables
+- Way of storing large amounts of data outside processes (even GBs)
+- Separate from process heaps.
+- All access by elements being copied to/from process heaps
+- Not implicitly garbage collected
+  - But remmeber reclaimed when table/element deleted.
+
+**** Process heaps
+- Sending messages is copying data. That's not all that inefficient.
+- Can set min/max process heap size
+- Each processes data is local for it
+- Allows us to collect each process separately
+- Garbage collections becomes more efficient.
+- Garbage collector becomes simpler
+- Lessen the need for synchronization, and better the more threads/cores you have.
+- Cache performance.
+- Uses a standard generational GCer.
+
+
+*** Async Thread Pool
+- File i/o is done on the scheduelr thread. So to not block it, we use async threads for file i/o.
+- Default now is 10 async threads.
+
+*** Tracing
+- fn calls, message passing, GC, scheduler.
+- efficient - costs only when you use it.
+- Live debugging.
+- dbg, redbug, recon, observer
+*** Crashing the beam
+- Fill the atom table
+- Overflow binary space
+- Uncontrolled process heap growth - Infinite recursion, very long message queues, a lot of data
+- Errors in NIFs and linked-in port-drivers (C code). Don't use NIF, use port.
+*** Observer
+- View properties of runnning systems
+- Works in a distributed env where observer on one node can inspect other nodes
+- Shows system information. ETS Tables.
+
+
+** Resources
+*** Applications and Libraries
+*** Basic Applications
+*** Database Applications
+*** Operations and Maintenance Applications
+*** Interface Communication Libraries
+*** Tool Applications
+
+*** Learning Resources
+- Learn you some Erlang
+- Erlang in Anger (prod systems)
+- Documentation:
+  - Design Principles (OTP)
+  - Reference Manual
+- Whatsapp handles 2 million connections. Erlang can handle 2 million processes, but connections?
+
+** Supervisors
+- Supervisor process vs worker process
+- They monitor their children and start child processes.
+- hard to get a supervisor to do work.
+** Other notes
+- There's only Data & Processes
+- It can get scheduler heavy - nothing's free.
