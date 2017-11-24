@@ -1,0 +1,84 @@
+* Introduction to DBs
+** DBMS
+
+A system to handle a database.
+
+- Interface to store data.
+- Visualize data.
+- Access/query data.
+- Update/manipulate data.
+
+A normal file system can do this too, but
+
+** Advantages of DBMS over file systems:
+
+1. Reduced data redundancy/inconsistency problems
+   By virtue of no redundancy, leads to consistency.
+
+2. Data isolation
+   Only one interface to access data - the data is not dependent on the env etc. because it isolates the data.
+
+3. Data integrity
+   Validates data. Integrity constants.
+
+4. Atomicity of operations
+   Transaction is atomic - either completely or not at all. No partial completion states.
+
+5. Concurrency
+   Transactions can happen at the same time.
+
+6. Security
+   Different access control levels in the database for tables, and also at field-level.
+
+
+* Relational Data Model
+** Relations:
+
+*** Definition & Example
+  If n-ary tuple (a1, a2, ...) , and each attribute a_{i} comes from domain D_{i}, then a relation is a cross product of sets Di.
+  a1: name = {A,B,C}
+  a2: street = {1st, 2nd}
+  a3: city = {Kolkata, Delhi}
+  R: { (A, 1st, Kolkata), (A, 2nd, Delhi), (B, 1st, Delhi) }
+
+*** Properties
+  1. Every member of the relation must be part of the cross product of the domain, but not neccesarily vice versa.
+  2. Relations are unordered, because it's a set.
+  3.
+
+*** Components
+**** Attribute
+  Has a name, and a domain. Column in a table.
+  Attributes are atomic - indivisible
+  Special value: NULL, part of every attribute
+
+
+**** Relation Schema
+   Description of the relation.
+   Can contain an address schema, R, say.
+   So if r is the relation, R is the schema, then r(R) is the relation instance.
+
+
+**** Tuple & Attribute
+  Row in a table.
+
+*** Relational database
+   Collection of multiple interrelated relations, and the connections between them.
+
+** Key
+   Consider a relational schema R. A subset K of attributes is called a superkey of R if the values of K are enough to determine values of the tuple.
+   Note: even if all names in the relation are unique, if it is /possible/ for names to be identical, then it's not a superkey attribute. This is thus a domain property.
+
+   *Properties*:
+   Any superset of a superkey is a superkey. e.g. K is a superkey, then (K,C) is also a superkey.
+
+*** Candidate Keys
+   Minimal superkey. minimal - if you take any subset, it's not a superkey.
+   A particular relation may have multiple candidate keys.
+
+*** Primary key & Secondary key
+   Both are candidate keys. And one of them is designated by the database designer as a primary key.
+
+*** Foreign Key
+   Relations have connections b/w them, say r1 <> r2. r1 has primary key pk1 and r2 has pk2. say r2 also has f2, which is a value of pk1, then f2 is a foreign key.
+   Referencing relation, and referenced relation.

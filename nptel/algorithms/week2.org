@@ -1,0 +1,145 @@
+- Todo: recurrence analysis from Math for CS
+- Todo: write complexity analysis proofs for algos (e.g. Merge Sort)
+* Analysis of Algorithms
+- Recurrences:
+* Searching & Sorting
+How do you store seqeuences? As arrays or lists. They're different from a complexity theory point of view.
+
+** Arrays & Lists
+*** Arrays
+- Single block of memory. Typically fixed size.
+- Indexing is fast - access A[i[ in constant time. Why? Implmentation such that if you know the beggining address and the unit size, then you just multiply offset (index)  with unit size to get address.
+- Inserting an elements b/w A[i] and A[i+1] is slow. Depends on the position but it is O(n) 0 expand or contract.
+
+*** Lists
+- As added to, values scattered in memory. Each element points to the next. Has flexible size.
+- Access: you'd havet to go throuw all O(n)
+- Inserting and deleting is easy O(1)
+
+*** Operations on the two:
+**** Exchange A[i] and A[j]
+- Array: constant time. Lists: linear time.
+**** Delete A[i] or Insert v after A[i]
+Constant time in lists. Lienar time in array.
+
+*** Algorithms are different
+e.g. Binary Search works with arrays but not lists.
+
+
+** Searching
+*** When unsorted
+- Array: linear time
+- List: linear time
+*** When sorted
+- Array: O(log n) - Binary search. Can write it simply using a recursive algorith. Because finding the midpoint is in constant time.
+- List: linear time.
+
+
+** Selection Sort
+- Basic motivation - make search easier, find median, check for duplicates.
+- O(n^2) - scan the list n times to find the smallest/largest, and repeat.
+- It builds a second list. WE can also just swap the minimum with the last value.
+- Proof: each step has maximum n steps, n-1 steps ... So N(N+1)/2 step -> O(n^2)
+
+** Insertion Sort
+- Keep a second array. Take one of the first, compare against the second, and see where it sits. [Inserting into correct position]
+- O(n^2), Even if you find the position to insert faster with binary search, you still have to insert which requires shifting all elements.
+- Usually behaves better than selection sort - in best case, linear time.
+
+** Bubble Sort
+O(n^2).
+
+**
+** Merge Sort
+- Better than O(n^2)
+- Take a list A. Split to A1 and A2. Sort A1 and A2, and then merge. But do this recursively (mroe layers of splitting).
+- Divide & conquer.
+- Merge is O(n). Divide is O(log n). Mergesort is O(nlogn).
+*** Analysis
+- For merging, we iterate through the array.
+- Each iteration takes constant time - O(1).
+- The number of iterations is proportional to the size of the array - O(n). So merge step: O(1 * n)
+- The number of merges we have to do is how many times we can split the array - log n times. So total time O(1 * n * log n)
+
+*** Variations
+- To remove duplicates too: in merge step, on equals, retain only one. (union)
+- To remove non-repeated numbers: in merge step, do  intersection.
+
+*** Shortcomings
+- Memory: extra space.
+- Inherently recursive - no way to make it iterative.
+*** 3-way?
+The drop in levels is offsetted by the extra merge work yo uhave to do.
+** Quick Sort
+To overcome shortcomings of Merge Sort.
+- How? By avoiding sorting during merge step (just join instead). How can we do this? Maintain an invariant: All numbers in left is smaller than ones on right. Median in the middle.
+- How do we find median? Only if we have median.
+- Instead, pick up some value in A - called *pivot*. Split A w.r.t the *pivot*.
+- Parition to left and right. w.r.t *pivot*. A linear scan.
+- Forward partitioning algorithm: keep a paritioned and unpartitioned part, and keep moving forward.
+- Another partitioning strategy: start from opposite ends. (Originally suggested by Tony Hoare). Exchange when you hit something greater/smaller on both ends.
+- OFten the default sorting algorithm (may use other optimizations)
+*** Analysis
+- Worst case: O(n^2), if all the pivots picked are leftmost/rightmost.
+- Sorting is a rare example where average is possible/easy to compute.
+**** Average case
+- Input is a permutation of {1,2,...,n}. Think of it as a re-ordering problem. n! permutations. You'd show 1/(n!)
+- Do this *randomly*. n-sided die.
+- Quicksort can be made iterative, using a stack to store left/right segments.
+** Other considerations
+*** Stable sorting
+- Each successive call should not disturb the initial sort order.
+- Quicksort is not stable: swap operating disturbs original order. (in the way we have implemeneted it)
+- Mergesort is stable if we merge carefully:
+  - Do not allow elements from right should come to elements from the left.
+  - Favour left list when breaking ties.
+- Insertion sort is also stable.
+*** Other costs of sorting
+Other than just no. of steps:
+- If data has a cost (so big if not stored on a single server): penalize exchanging across the ends of a large array - exchange nearer idnexes.
+- In default in-memory implemementations: quicksort. In databases: external merge sort.
+*** Other sorting algos and factors
+- Another sort: heap sort.
+- In certain cases, even if O(n^2), the naive algorithm beats the complexity of faster algorithms for really small n.
+- Hybrid algorithms: e.g. mergesort for large n, for n < 16, use naive O(n^2) algo.
+** Overhead for recursive calls
+When you make a recursive call.
+1. Suspend current function.
+2. Load a new context for the new call.
+3. Throw away new context.
+4. Restore old context.
+Many language compiers  optimize for this.
+
+** Exercises
+
+ function StrangeMerge(A,m,B,n,C) {
+    i = 0; j = 0; k = 0;
+
+    while (k < m+n) {
+      if (i == m) {j++; k++;}
+      if (j == n) {C[k] = A[i]; i++; k++;}
+
+      if (i != m and j != n) {
+        if (A[i] < B[j]) {C[k] = A[i]; i++; k++;}
+        if (A[i] == B[j]) {i++; j++; k++;}
+        if (A[i] > B[j]) {j++; k++;}
+      }
+    }
+  }
+
+
+
+[1,4,8,3,5,6]
+A = [1,4,8], B = [3,5,6]
+m = 2, n = 3
+
+i 0 ,j 0, k 0
+
+k < m + n? i.e. keep looping if k < len(array)
+
+i == m? increment the other two.
+j == n? Assign k value of C
+
+
+k is the loop counter. always incremented (every clause).
+C[k] is assigned in some cases, others it is skipped. C[k] is always assigned A[i].
