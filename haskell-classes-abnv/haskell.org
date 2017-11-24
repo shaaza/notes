@@ -1,0 +1,72 @@
+* Intro class
+First two chapters of Haskell Programming from First principles
+** What is it?
+Lazy, pure functional programming language.
+*** Functional
+- write your code in terms of expressions, instead of statemetns.
+- An expression always has a value, whereas statements may or may not give you a value.
+- Functions are itself a value: you can pass it around - first-class. [surjective, non-injective]
+
+*** Purity
+- A function is referentially transparent: for the same input, output is always the same.
+- Random is not pure fn. Haskell, you need a lot of ceremony to write impure function.
+
+*** Lazy
+** Lambda calculus
+*** 1. alpha equivalence
+argument is defined only in the context of the lambda.
+if expr is same, and arity of input variables are same, same function.
+- i.e. fn(x).x+1 is equivalent to fn(y).y+1, when fn(x,y).x+1 is not equivalent.
+*** 2. beta reduction
+- now you have fns, what do you do with them?
+- you evaluate functions. beta reduction is evaluation
+- E.g. of evaluationL (fn(x).x+1)2 becomes 2+1 becomes 3. 3 is the normal form, a value which cannot be reduced anymore.
+- Normal form: not beta reducible - not necessarily value. in the below case, the last expr is in its normal form.
+- (f(x).x+1) (f(y).y) = (f(y).y+1) + 1
+
+
+*** Free variables
+- In 1 + y, y is a free variable. if you never know what the value of a free variable is, then you're not really using it.
+- in lambda calculus, all functions take only one input. (f(y).f(x).x+y)2 1 = (f(x).x+2)1 = 1 + 2 = 3
+- a free variable may be closed on another function outside. in a full program all free variables will close.
+*** Divergent functions
+- All fns are not beta reducible.
+-^ this is a DIVERGENT function  E.G. (f(x).xx)(f(x).xx) = (f(x).xx)(f(x).xx). They never have a value. They never converge.
++ Their not having a value is called a 'bottom' - not having a value.
++ Halting problem: the program can never know whether it will halt. you can't write a program that can determine whether computation will end.
++ there's `undefined` in haskell, which is also a bottom. you can write a program that never stops executing or give you a value, which means you got a bottom.
+** Haskell the language & setup
+- A spec comes out every (?) 10 years. Committee publishes a spec and someone implements that.
+- There still are multiple compilers for haskell
+- Most commonly used ghc (Glasgow haskell compiler)
+- Dependencies are source only, hence all packages compile on your system.
+- stack can cache precompiled packages.
+*** stack
+- haskellstack.org
+- stack setup for compiler
+- stack install packages
+- do `stack ghci` to
+
+** Code in repl
+1. let sq x = x * x
+2. let exp x y = x ^ y
+3. (+) 1 1
+4. integer division is `div`5
+5. / is fractional division
+*** symbolic and regular
+6. / + are all symbolic function coz they can be infix. Can be turned to regular fns (prefix) by wrapping it in parens
+7. any regular fn can be turned to a symbolic fn by using back ticks 10 `div` 2
+*** associativity and precedence of a function
+- in ghci :info (*) returns infixl 7 *, means that * is left associative with a precedence of 7
+- custom functions can alse be defined with these charactersistic defined
+- defining for custom functions:
+let (##) x y = x + y
+infixl 7 ##
+- let x $$ y = x + y [also works but only if a variable name has special symbols]
+*** math fns & types
+- / + mod
+- quot will always round towards 0 (try with negative)
+- div always round towards the other direction
+- rem & mod
+- is both a binary function and a unary function - only - is special like that.
+- 'a' is a char & "a" is a string, so you can't compare them
