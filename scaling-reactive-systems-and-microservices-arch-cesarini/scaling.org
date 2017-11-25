@@ -1,0 +1,181 @@
+Node Arch -> Dist Archs, Systems That Never Stop, Scaling Out, Monitoring and Preemptive Support
+Concurrency + Distribution = availability. +scalability
+
+Tradeoffs: 10 design decisions
+
+- No single point of failure
+- Avoid backpressure
+- Limits of consistency and reliability when scaling
+- Understand tradeoffs you need to make
+
+* History
+
+** AXD301 ATM Switch (over Cisco’s IP)
+    1. Hot-standby via stable-state replication
+    2. 35000 calls per processor pair
+    3. 9 9s 3ms is not true (depends on when you count)  - 5 9s is more likely -
+** Jagger Proxy 2000
+    1. IM Chat thing
+    2. At the time a machine could handle 512 socket connections only.
+    3. Scaled horizontally, without sharing state. Predecessor to sharding.
+** Ejabberd 2002
+    1. Mnesia database.
+    2. Each node would have a replica of each user etc. Fully replicated system.
+    3. 30000 users
+    4. What’s app did 2 million TCP/IP connections. Cascading failures. Log on/log off are heavy.
+** 3rd Party SMS Gateway 2004
+    1. T-Mobile, bulk sms.
+    2. First examples of microservices in production. Optimized the nodes based on purpose.
+    3. Broke them down on functions: io/disk/network. Public nodes (yaws) were stateless. Replicated transaction node, reply node, to be manually repointed.
+    4. Downtime: ignored 95% disk full, node down.
+** Multimedia Messaging Gateway System 2007
+    1. Ogo, AT&T spin off, targeted at teenagers.
+    2. 80% of Microsoft’s Wireless Instant Messaging traffic. 3000msgs/sec.
+    3. Replicate sessions (earlier messages too). Went to 13000msgs/sec when only sessions where shared.
+    4. DB only for user account data, all transaction nodes spoke to it.
+    5. Only eventually consistent. Eventually consistent business logic too.
+    6. IF deletes failed, go independently and garbage collect.
+    7. 99% of messages would deliver in 1 minute.
+    8. Separation of concerns, isolating failure, capability based deployment.
+    9. 2-Level Hashing: weren’t aware of consistent hashing at the time (the Dynamo paper? 2-3 times). Distributing data, CAP Theorem.
+    10. Where we are today. Next generation ->
+** Riak Distributed Key Value store
+    1. Similar to Cassandra (his opinion better). Basho bankrupt, expand too quickly. Solid customers.
+    2. Riak is open-source.
+    3. Separated distributed layer from storage layer.
+    4. Riak: simplify code, patches, fix issues. An instance of Erlang VM.
+* 10 design tradeoffs
+1. OTP
+    1. Provides a good job of providing common terminology.
+    2. Node type: Clients -> Web Server (Front-end Nodes) -> Business Logic (Logic Nodes) -> DB (Service Nodes). Logic + Service nodes merged for performance.
+    3. Node family of one node type. Node families form a system.
+2. -
+    1. Split up system’s functionality into manageable standalone nodes
+        1. Identify Services: (what is a service? -> Services for reusability)
+        2. Isolate Failure in each node type.
+        3. Memory vs CPU Bound (vs IO Bound): allows optimising each thing at a time.
+        4. Safe vs Unsafe Nodes
+    2. Distributed Architectural Patterns
+        1. What scale? What availability? What reliability? From day one? Do you want dynamic scaling?
+        2. Replication, redundancy,
+        3. (TPM) lol. ?(omnyway - abhik)
+        4. Start simple. Live early, fail fast.
+        5. Your services will remain same even if you change the pattern/architecture.
+        6. Epmd: one on every instance .daemon.
+        7. No one-size, depends on use case. Work towards abstracting this away from a developer.
+        8. Alan Kay vs college OO. Importance. Concurrent, imperative, functional, logic. No on uses prolog, but the ideas are used everywhere.
+        9. Patterns: All of these are complementary to each other.
+            1. Fully Meshed
+                1. Simplest. 90% fully meshed - 10s of 1000s of rpm most of the time. (50rps? Or did I hear wrong)
+            2. Dynamo Approach
+                1. Keyspace: 0 to 2^160. -> break down into vnodes or partitions
+                2. vnode -> physical nodes. Replicas of physical nodes.one physical node can have multiple nodes.
+                3. Ring of routers/logic nodes. Riak - 100.
+                4. GS uses to deliver millions of messages. Job scheduling. 7 ring of router nodes.
+                5. Riak core: Riak vs Cassandra?
+                    1. Consistent Hashing
+                    2. Virtual Nodes
+                    3. Gossip Nodes
+                    4. Hinted Handoff: if a node goes down, you save the data on the node’s neighbour. Moves back it tp the primary one, when back up.
+                    5. Sloppy Quoroms: RF + WF > Replication
+                6.
+            3. SD Erlang (scalable distributed)
+                1. If a node is part of two separate groups - acts as a gateway
+                2. ~sharding
+                3. Research project, not in prod. Nodes belong to multiple groups, acts as a gateway.
+            4. Service Oriented Architecture
+                1. Messaging bus.
+                2. Service discovery.
+                3. In erlang, it would be natural.
+            5. Peer to Peer
+                1. The most scalable of them all. Kazaa, BitTorrent, Blockchain.
+            6. Sharding
+    3. Protocols:
+        1. Design for replaceability of your network layer.?
+        2. DMZ - demilitarised zones - known as unsafe - SSL to TCP/IP. Docker containers keep popping up and down - moving target security.  Give attackers 3-4 seconds to exploit a vulnerability.
+        3. Choose one for between nodes, between node families, between clusters.
+            1. Dist Erlang
+            2. MPI, 0MQ, UDP, SSL
+            3. Sockets or SSL
+            4. REST, AMQP, SNMP, XMPP, MQTT
+            5. Optimizing for bandwidth, or speed? Security required. How are you going to handle an unreliable network?
+        4. Bottlenecks: pool of connections instead of one.
+    4. Define node interfaces, state and data model:
+        1. Use stories. One request a time.
+    5. Systems that never stop (retry strategy)
+        1. Joe Armstrong: to build a fault-tolerant system, you need atleast two coz one might get hit by lightning. Leslie Lamport: 3 - PAXOS.
+        2. High Availability:
+            1. No SPOF: Redundant networks, power supplies, power generators, disk. AT&T telephone switches.
+            2. AT&T had a petrol tank for 2 weeks power in Manhattan.
+            3. Fail fast: fault-tolerant. As long as it’s predictable. MongoDB is fault-tolerant because it documents that out can lose data- fault-tolerant, not reliable.
+        3. Reliability
+            1. Ability of a system to function under predefined conditions, including errors.
+            2. ?(When nodes fail equally?)
+    6. Sharing data
+        1. You distribute data for scale and replicate for availability. ?(Other problems around sharing data)
+        2. Data duplication strategy
+            1. Share nothing
+            2. Share something: maybe only session data. Amazon: merge the session across carts etc.
+            3. Share everything
+                1. Primary-primary replication
+                2. Primary-secondary replication
+                3. Constisntnecy models:
+                    1. Eventual consistency (Riak)
+                    2. CRDTs
+                    3. Strong consistency
+                    4. Join of data after network splits
+                4. Idempotence
+        3. Retry Strategy’
+            1. Atleast once: idempotence using request IDs. ?(Retry at eveyrlayer? ) (Retries and Backpressure?) (Retries with 3rd party)
+            2. What if you lose messages
+            3. At the most once: you can lose messages. SMSs.
+            4. Exactly once (at the most once with notification). You get back an error. So go and check the status when you get an error. Finance.
+            5. Immutability allows retrying.
+        4. Handling Errors
+        5. Tradeoffs (Reliability vs Aviliaility) (Isolate sharing everything - different parts of your system need different concerns)
+            1. Share everything: reliability is good, but availability suffers.
+            2. Share something: mid both
+            3. Share nothing: high availability
+            4. Closure vs Transitive: order is important? How are they related to sharing data?
+        6. Tradeoffs Recovery Strategy (Consistency vs Availability)
+            1. Exactly once is most consistent
+            2. At least once is is mid
+            3. At most once is least consistence, but high availability.
+    7. Horizontal Scalability
+    8. Capacity planning: withstand the load and scale to handle increase demand
+        1. No SPOF
+        2. Cluster blueprint for scalability
+        3. Load regulation (Safety Valve)
+        4. Back Pressure
+    9. Scale
+        1. Bamboo - python 10x hardware.
+        2. Stress test
+            1. Bottlenecks in concurrency model
+            2. I/O
+            3. OS
+            4. NETWORK
+            5. 3rd Party APIs
+        3. Soak testing: over weeks (e.g logs)
+        4. Spike testing:
+        5. Stress testing:
+        6. Load testing (difference?)
+        7. Load regulate at 3rd party layer, Backpressure at the top level.
+    10. Monitoring and Pre-Emptive Support
+        1. Logs Alarms Metrics
+        2. Quickly identify with warnings.
+        3. Logs:
+            1. State changes in business logic
+            2. System state changes
+            3. SASL Logs
+            4. Alarm Logs
+        4. Metrics
+            1. System metrics
+            2. Business metrics
+        5. Alarms
+            1. Generate alarms within your system, not based on metrics.
+            2. Metrics based
+            3. System Alarms
+            4. Business Logic specific alarms
+            5. Aggregate alarms when required?
+    11. Support Automation
+        1. On Disk Full alarm. Different things to do - scripts.
