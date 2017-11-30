@@ -70,3 +70,66 @@ infixl 7 ##
 - rem & mod
 - is both a binary function and a unary function - only - is special like that.
 - 'a' is a char & "a" is a string, so you can't compare them
+
+** Strings
+[28/11/2017]
+
+- A list of [Char]
+*** Print
+- putStrLn "dfdfdfd"
+- putStr "asdas"
+write to stdout
+
+*** Concatenation
+- "asdasd" ++ "asdasd"
+- :t (++)    {brackets are required for fns with symbolic names}
+- concat ["asdasd", "asdasd", "asdasd"]
+- concat [[1,2,3], [1,2,3]]
+
+*** Lists
+- all elements have to be of same type: homogeneous lists.
+
+** Functions of multiple arguments / Currying
+- All functions are curried by default.
+- [a] -> ([a] -> [a])
+- A function which returns another function of type [a] -> [a]
+
+** Adhoc Polymorphism
+- A same thing behaves in different ways depending on the args you give it.
+- Adhoc: can give it anything. [a] -> [a] -> [a]
+
+** Cons
+- 'c' : "Ssdsd"
+
+** Head
+- :t head
+- Can either only return the first or the last element. Not any, because it won't be referenitally transparent if it was random.
+- Equational reasoning/logic: reason a lot of stuff by looking at type signatures.
+
+** Tail
+- :t tail
+- Rest of the list.
+
+** Take
+take 3 "asdasda" -> asd
+take 100 "asdas" -> "asdas"
+
+** Drop
+drop 2 "asdasd" -> "dasd"
+drop (-1) "Sadssa" -> "Sadssa"
+
+** Unsafe functions
+- head and tail crash on invalid inputs. There ar elinters which will indicate them. There are safe versions.
+- They are also called non-total functions: they have bottoms :P
+** !! (Indexing)
+"asdasd" !! 44 (unsafe)
+** If
+if True then 'a' else 'v'
+** Top-level defs
+Don't need a let.
+** Non-agnostic indentation
+** let
+- is defined for a certain expression, hence let ... in <expr> syntax
+- you can nest lets.
+- in repl you can use :set +m for newlines, and :unset +m to stop doing that
+- bindings are ordered sequentially.
